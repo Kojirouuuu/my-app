@@ -16,6 +16,12 @@ import { getCurrentUser } from "aws-amplify/auth";
 import { router } from "expo-router";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
+import { generateClient } from "aws-amplify/api";
+import { updateProfile } from "../../src/graphql/mutations";
+import { getProfile } from "../../src/graphql/queries";
+import { GraphQLResult } from "@aws-amplify/api";
+
+const client = generateClient();
 
 export default function ProfileScreen() {
   const { signOut: useAuthSignOut } = useAuth();
@@ -50,31 +56,23 @@ export default function ProfileScreen() {
 
   const loadProfileData = async (userId: string) => {
     try {
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_API_URL}/profile/${userId}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const response = (await client.graphql({
+        query: getProfile,
+        variables: { userId },
+      })) as GraphQLResult<any>;
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data) {
-          setDisplayName(data.display_name || "");
-          setBio(data.bio || "");
-          const ingredients = data.favorite_ingredients
-            ? JSON.parse(data.favorite_ingredients)
-            : [];
-          setFavoriteIngredients(ingredients);
-          setFavoriteIngredientsText(ingredients.join(", "));
-          setRefrigeratorBrand(data.refrigerator_brand || "");
+      if (response.data?.getProfile) {
+        const data = response.data.getProfile;
+        setDisplayName(data.display_name || "");
+        setBio(data.bio || "");
+        setFavoriteIngredients(data.favorite_ingredients || []);
+        setFavoriteIngredientsText(
+          (data.favorite_ingredients || []).join(", ")
+        );
+        setRefrigeratorBrand(data.refrigerator_brand || "");
 
-          setEditedUsername(data.display_name || "");
-          setEditedBio(data.bio || "");
-        }
+        setEditedUsername(data.display_name || "");
+        setEditedBio(data.bio || "");
       }
     } catch (error) {
       console.error("Error loading profile data:", error);
@@ -178,24 +176,20 @@ export default function ProfileScreen() {
         .map((item) => item.trim())
         .filter((item) => item.length > 0);
 
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_API_URL}/profile`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
+      const response = (await client.graphql({
+        query: updateProfile,
+        variables: {
+          input: {
             userId: user.username,
             displayName: editedUsername,
             bio: editedBio,
             favoriteIngredients: newFavoriteIngredients,
             refrigeratorBrand,
-          }),
-        }
-      );
+          },
+        },
+      })) as GraphQLResult<any>;
 
-      if (response.ok) {
+      if (response.data?.updateProfile) {
         setDisplayName(editedUsername);
         setBio(editedBio);
         setFavoriteIngredients(newFavoriteIngredients);

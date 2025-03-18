@@ -28,26 +28,66 @@ CREATE TABLE IF NOT EXISTS user_profiles (
 )`;
 
 exports.handler = async (event) => {
-  // RDS の接続情報はハードコーディングするのではなく、環境変数や Secrets Manager を利用することが望ましいです
   const connectionConfig = {
-    host: process.env.RDS_HOST, // RDS のエンドポイント
-    user: process.env.RDS_USER, // RDS ユーザー名
-    password: process.env.RDS_PASSWORD, // RDS パスワード
-    database: process.env.RDS_DATABASE, // データベース名
+    host: process.env.RDS_HOST,
+    user: process.env.RDS_USER,
+    password: process.env.RDS_PASSWORD,
+    database: process.env.RDS_DATABASE,
   };
 
   let connection;
   try {
     connection = await mysql.createConnection(connectionConfig);
-
-    // Ensure table exists
     await connection.execute(CREATE_TABLE_SQL);
 
-    // イベントのタイプに基づいて処理を分岐
+    // AppSyncからのGraphQLミューテーションの場合
+    if (event.fieldName === "updateProfile") {
+      const { input } = event.arguments;
+
+      await connection.execute(
+        `INSERT INTO user_profiles 
+        (cognito_user_id, display_name, bio, favorite_ingredients, refrigerator_brand) 
+        VALUES (?, ?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE 
+        display_name = VALUES(display_name),
+        bio = VALUES(bio),
+        favorite_ingredients = VALUES(favorite_ingredients),
+        refrigerator_brand = VALUES(refrigerator_brand)`,
+        [
+          input.userId,
+          input.displayName,
+          input.bio,
+          JSON.stringify(input.favoriteIngredients),
+          input.refrigeratorBrand,
+        ]
+      );
+
+      const [rows] = await connection.execute(
+        "SELECT * FROM user_profiles WHERE cognito_user_id = ?",
+        [input.userId]
+      );
+
+      if (rows[0]) {
+        return {
+          id: rows[0].id.toString(),
+          cognito_user_id: rows[0].cognito_user_id,
+          display_name: rows[0].display_name,
+          bio: rows[0].bio,
+          favorite_ingredients: JSON.parse(
+            rows[0].favorite_ingredients || "[]"
+          ),
+          refrigerator_brand: rows[0].refrigerator_brand,
+          created_at: rows[0].created_at,
+          updated_at: rows[0].updated_at,
+        };
+      }
+      throw new Error("Profile not found");
+    }
+
+    // REST APIの場合
     switch (event.httpMethod) {
       case "GET":
         if (event.pathParameters && event.pathParameters.userId) {
-          // Get user profile by Cognito user ID
           const [rows] = await connection.execute(
             "SELECT * FROM user_profiles WHERE cognito_user_id = ?",
             [event.pathParameters.userId]
@@ -66,8 +106,6 @@ exports.handler = async (event) => {
       case "POST":
         if (event.body) {
           const profile = JSON.parse(event.body);
-
-          // Insert or update user profile
           await connection.execute(
             `INSERT INTO user_profiles 
             (cognito_user_id, display_name, bio, favorite_ingredients, refrigerator_brand) 
@@ -85,28 +123,50 @@ exports.handler = async (event) => {
               profile.refrigeratorBrand,
             ]
           );
+
+          const [rows] = await connection.execute(
+            "SELECT * FROM user_profiles WHERE cognito_user_id = ?",
+            [profile.userId]
+          );
+
+          if (rows[0]) {
+            return {
+              statusCode: 200,
+              headers: {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*",
+              },
+              body: JSON.stringify({
+                id: rows[0].id.toString(),
+                cognito_user_id: rows[0].cognito_user_id,
+                display_name: rows[0].display_name,
+                bio: rows[0].bio,
+                favorite_ingredients: JSON.parse(
+                  rows[0].favorite_ingredients || "[]"
+                ),
+                refrigerator_brand: rows[0].refrigerator_brand,
+                created_at: rows[0].created_at,
+                updated_at: rows[0].updated_at,
+              }),
+            };
+          }
           return {
-            statusCode: 200,
+            statusCode: 404,
             headers: {
               "Content-Type": "application/json",
               "Access-Control-Allow-Origin": "*",
             },
-            body: JSON.stringify({
-              message: "Profile updated successfully",
-              userId: profile.userId,
-            }),
+            body: JSON.stringify({ error: "Profile not found" }),
           };
         }
         break;
 
       case "DELETE":
         if (event.pathParameters && event.pathParameters.userId) {
-          // Delete user profile
           await connection.execute(
             "DELETE FROM user_profiles WHERE cognito_user_id = ?",
             [event.pathParameters.userId]
           );
-
           return {
             statusCode: 200,
             headers: {
@@ -132,14 +192,7 @@ exports.handler = async (event) => {
     };
   } catch (error) {
     console.error("Error:", error);
-    return {
-      statusCode: 500,
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
-      },
-      body: JSON.stringify({ error: "Internal Server Error" }),
-    };
+    throw error;
   } finally {
     if (connection) {
       await connection.end();

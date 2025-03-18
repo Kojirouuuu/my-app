@@ -52,19 +52,19 @@ exports.handler = async function (event) {
       })
       .promise();
 
-    // 4. RDSに接続
+    // 4. RDSに接続（rdsLambdaFunctionと同じ接続情報を使用）
     const connection = await mysql.createConnection({
-      host: "shopping-support-app-testdatabase.c072kyc6kbsu.us-east-1.rds.amazonaws.com",
-      user: "reactuser",
-      password: "gamzir-3zybwU-pokhyp",
-      database: "shopping-support-app-testdatabase",
+      host: process.env.RDS_HOST, // RDS のエンドポイント
+      user: process.env.RDS_USER, // RDS ユーザー名
+      password: process.env.RDS_PASSWORD, // RDS パスワード
+      database: process.env.RDS_DATABASE, // データベース名
     });
 
-    // 5. 検出された食材をデータベースに保存
+    // 5. 検出された食材をデータベースに保存（新しいテーブルを使用）
     for (const item of selectedIngredients) {
       const sql = `
-        INSERT INTO fridge_items (user_id, item_name, confidence, image_url)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO fridge_contents (user_id, item_name, confidence, image_url, created_at)
+        VALUES (?, ?, ?, ?, NOW())
       `;
       const imageUrl = `https://${bucket}.s3.amazonaws.com/${imageKey}`;
       await connection.execute(sql, [

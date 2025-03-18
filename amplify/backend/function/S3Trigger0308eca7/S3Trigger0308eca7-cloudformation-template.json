@@ -10,6 +10,18 @@
     },
     "s3Key": {
       "Type": "String"
+    },
+    "rdsHost": {
+      "Type": "String"
+    },
+    "rdsUser": {
+      "Type": "String"
+    },
+    "rdsPassword": {
+      "Type": "String"
+    },
+    "rdsDatabase": {
+      "Type": "String"
     }
   },
   "Conditions": {
@@ -53,6 +65,18 @@
           "Variables": {
             "ENV": {
               "Ref": "env"
+            },
+            "RDS_HOST": {
+              "Ref": "rdsHost"
+            },
+            "RDS_USER": {
+              "Ref": "rdsUser"
+            },
+            "RDS_PASSWORD": {
+              "Ref": "rdsPassword"
+            },
+            "RDS_DATABASE": {
+              "Ref": "rdsDatabase"
             }
           }
         },

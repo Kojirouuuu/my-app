@@ -66,16 +66,16 @@ export default function HomeScreen() {
     try {
       // Get existing images for the day
       const { items } = await list({
-        prefix: `public/fridge-contents/${username}/${dateStr}`,
+        prefix: `fridge-contents/${username}/${dateStr}`,
       });
 
       // Calculate next index
       const nextIndex = items.length + 1;
 
-      return `public/fridge-contents/${username}/${dateStr}_${nextIndex}`;
+      return `fridge-contents/${username}/${dateStr}_${nextIndex}`;
     } catch (error) {
       console.error("Error getting upload count:", error);
-      return `public/fridge-contents/${username}/${dateStr}_1`;
+      return `fridge-contents/${username}/${dateStr}_1`;
     }
   };
 

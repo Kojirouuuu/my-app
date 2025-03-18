@@ -13,3 +13,18 @@ export const getUsers = /* GraphQL */ `
     }
   }
 `;
+export const getProfile = /* GraphQL */ `
+  query GetProfile($userId: ID!) {
+    getProfile(userId: $userId) {
+      id
+      cognito_user_id
+      display_name
+      bio
+      favorite_ingredients
+      refrigerator_brand
+      created_at
+      updated_at
+      __typename
+    }
+  }
+`;

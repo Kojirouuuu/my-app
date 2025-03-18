@@ -5,6 +5,31 @@ input AMPLIFY {
 } # FOR TESTING ONLY!
 type Query {
   getUsers: [User] @function(name: "getUsers")
+  getProfile(userId: ID!): Profile @function(name: "rdsLambdaFunction")
+}
+
+type Mutation {
+  updateProfile(input: UpdateProfileInput!): Profile
+    @function(name: "rdsLambdaFunction")
+}
+
+type Profile {
+  id: ID!
+  cognito_user_id: ID!
+  display_name: String
+  bio: String
+  favorite_ingredients: [String]
+  refrigerator_brand: String
+  created_at: AWSDateTime
+  updated_at: AWSDateTime
+}
+
+input UpdateProfileInput {
+  userId: ID!
+  displayName: String
+  bio: String
+  favoriteIngredients: [String]
+  refrigeratorBrand: String
 }
 
 type User {

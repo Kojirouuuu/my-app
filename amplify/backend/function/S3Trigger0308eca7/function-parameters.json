@@ -1,0 +1,20 @@
+{
+  "environmentVariableList": [
+    {
+      "cloudFormationParameterName": "rdsHost",
+      "environmentVariableName": "RDS_HOST"
+    },
+    {
+      "cloudFormationParameterName": "rdsUser",
+      "environmentVariableName": "RDS_USER"
+    },
+    {
+      "cloudFormationParameterName": "rdsPassword",
+      "environmentVariableName": "RDS_PASSWORD"
+    },
+    {
+      "cloudFormationParameterName": "rdsDatabase",
+      "environmentVariableName": "RDS_DATABASE"
+    }
+  ]
+}

@@ -18,11 +18,15 @@
       "function": {
         "S3Trigger0308eca7": {
           "deploymentBucketName": "amplify-myapp-dev-44405-deployment",
-          "s3Key": "amplify-builds/S3Trigger0308eca7-552b757368536f447139-build.zip"
+          "s3Key": "amplify-builds/S3Trigger0308eca7-5042354c4e7955744436-build.zip",
+          "rdsHost": "database-1.czmmgmk2enga.ap-northeast-1.rds.amazonaws.com",
+          "rdsUser": "admin",
+          "rdsPassword": "MToKGR4hBoQzhKXUCuxO",
+          "rdsDatabase": "myapp-rds"
         },
         "rdsLambdaFunction": {
           "deploymentBucketName": "amplify-myapp-dev-44405-deployment",
-          "s3Key": "amplify-builds/rdsLambdaFunction-3447476650526d317242-build.zip",
+          "s3Key": "amplify-builds/rdsLambdaFunction-6d514d6a6c496c616f57-build.zip",
           "rdsHost": "database-1.czmmgmk2enga.ap-northeast-1.rds.amazonaws.com",
           "rdsUser": "admin",
           "rdsPassword": "MToKGR4hBoQzhKXUCuxO",

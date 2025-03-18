@@ -96,6 +96,38 @@
         }
       ]
     },
+    "AMPLIFY_function_S3Trigger0308eca7_rdsDatabase": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "S3Trigger0308eca7"
+        }
+      ]
+    },
+    "AMPLIFY_function_S3Trigger0308eca7_rdsHost": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "S3Trigger0308eca7"
+        }
+      ]
+    },
+    "AMPLIFY_function_S3Trigger0308eca7_rdsPassword": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "S3Trigger0308eca7"
+        }
+      ]
+    },
+    "AMPLIFY_function_S3Trigger0308eca7_rdsUser": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "S3Trigger0308eca7"
+        }
+      ]
+    },
     "AMPLIFY_function_S3Trigger0308eca7_s3Key": {
       "usedBy": [
         {
