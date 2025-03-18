@@ -16,10 +16,7 @@ import { uploadData, getUrl, list } from "aws-amplify/storage";
 import { getCurrentUser } from "aws-amplify/auth";
 import { useEffect } from "react";
 
-import { HelloWave } from "@/components/HelloWave";
-import ParallaxScrollView from "@/components/ParallaxScrollView";
-import { ThemedText } from "@/components/ThemedText";
-import { ThemedView } from "@/components/ThemedView";
+import ParallaxScrollView from "@/components/layouts/ParallaxScrollView";
 import { useState } from "react";
 
 Amplify.configure(awsconfig);
