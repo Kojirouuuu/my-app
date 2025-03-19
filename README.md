@@ -1,50 +1,68 @@
-# Welcome to your Expo app 👋
+# 冷蔵庫管理アプリ 🧊
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+このアプリは、ユーザーの冷蔵庫の内容を管理し、レシピ提案を行うための Expo アプリケーションです。
 
-## Get started
+## 主な機能
 
-1. Install dependencies
+- ユーザープロフィール管理
+
+  - プロフィール画像のアップロード
+  - ユーザー情報の編集（表示名、自己紹介、お気に入りの食材など）
+  - 冷蔵庫メーカーの設定
+
+- AWS Amplify との連携
+  - S3 を使用したプロフィール画像の保存
+  - S3 を使用したプロフィールデータの保存
+  - ユーザー認証
+
+## 技術スタック
+
+- [Expo](https://expo.dev)
+- [React Native](https://reactnative.dev)
+- [AWS Amplify](https://aws.amazon.com/amplify/)
+- [Expo Router](https://docs.expo.dev/router/introduction)
+
+## セットアップ方法
+
+1. 依存関係のインストール
 
    ```bash
    npm install
    ```
 
-2. Start the app
+2. アプリの起動
 
    ```bash
-    npx expo start
+   npx expo start
    ```
 
-In the output, you'll find options to open the app in a
+出力に表示されるオプションから、以下のいずれかの方法でアプリを開くことができます：
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+- [開発用ビルド](https://docs.expo.dev/develop/development-builds/introduction/)
+- [Android エミュレータ](https://docs.expo.dev/workflow/android-studio-emulator/)
+- [iOS シミュレータ](https://docs.expo.dev/workflow/ios-simulator/)
+- [Expo Go](https://expo.dev/go)（Expo のサンドボックス環境）
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## 開発方法
 
-## Get a fresh project
+アプリの開発は`app`ディレクトリ内のファイルを編集することで行えます。このプロジェクトは[ファイルベースのルーティング](https://docs.expo.dev/router/introduction)を使用しています。
 
-When you're ready, run:
+## プロジェクトのリセット
+
+新しいプロジェクトとして始めたい場合は、以下のコマンドを実行してください：
 
 ```bash
 npm run reset-project
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+このコマンドは、スターターコードを`app-example`ディレクトリに移動し、新しい`app`ディレクトリを作成します。
 
-## Learn more
+## 参考リンク
 
-To learn more about developing your project with Expo, look at the following resources:
+- [Expo ドキュメント](https://docs.expo.dev/): 基本的な概念や高度なトピックについて学ぶ
+- [Expo チュートリアル](https://docs.expo.dev/tutorial/introduction/): Android、iOS、Web で動作するプロジェクトの作成方法を学ぶ
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## コミュニティ
 
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- [Expo on GitHub](https://github.com/expo/expo): オープンソースプラットフォームの閲覧と貢献
+- [Discord community](https://chat.expo.dev): Expo ユーザーとのチャットや質問

@@ -26,7 +26,7 @@
         },
         "rdsLambdaFunction": {
           "deploymentBucketName": "amplify-myapp-dev-44405-deployment",
-          "s3Key": "amplify-builds/rdsLambdaFunction-6d514d6a6c496c616f57-build.zip",
+          "s3Key": "amplify-builds/rdsLambdaFunction-3845774c6a7a555a6363-build.zip",
           "rdsHost": "database-1.czmmgmk2enga.ap-northeast-1.rds.amazonaws.com",
           "rdsUser": "admin",
           "rdsPassword": "MToKGR4hBoQzhKXUCuxO",

@@ -12,6 +12,10 @@ Amplify Params - DO NOT EDIT */ /**
  */
 
 const mysql = require("mysql2/promise");
+const AWS = require("aws-sdk");
+const s3 = new AWS.S3();
+
+const BUCKET_NAME = process.env.STORAGE_S38D7558C4_BUCKETNAME;
 
 // SQL for creating user_profiles table if not exists
 const CREATE_TABLE_SQL = `
@@ -28,145 +32,111 @@ CREATE TABLE IF NOT EXISTS user_profiles (
 )`;
 
 exports.handler = async (event) => {
-  const connectionConfig = {
-    host: process.env.RDS_HOST,
-    user: process.env.RDS_USER,
-    password: process.env.RDS_PASSWORD,
-    database: process.env.RDS_DATABASE,
-  };
-
-  let connection;
   try {
-    connection = await mysql.createConnection(connectionConfig);
-    await connection.execute(CREATE_TABLE_SQL);
-
     // AppSyncからのGraphQLミューテーションの場合
     if (event.fieldName === "updateProfile") {
       const { input } = event.arguments;
+      const profileData = {
+        id: input.userId,
+        cognito_user_id: input.userId,
+        display_name: input.displayName,
+        bio: input.bio,
+        favorite_ingredients: input.favoriteIngredients,
+        refrigerator_brand: input.refrigeratorBrand,
+        updated_at: new Date().toISOString(),
+      };
 
-      await connection.execute(
-        `INSERT INTO user_profiles 
-        (cognito_user_id, display_name, bio, favorite_ingredients, refrigerator_brand) 
-        VALUES (?, ?, ?, ?, ?)
-        ON DUPLICATE KEY UPDATE 
-        display_name = VALUES(display_name),
-        bio = VALUES(bio),
-        favorite_ingredients = VALUES(favorite_ingredients),
-        refrigerator_brand = VALUES(refrigerator_brand)`,
-        [
-          input.userId,
-          input.displayName,
-          input.bio,
-          JSON.stringify(input.favoriteIngredients),
-          input.refrigeratorBrand,
-        ]
-      );
+      // S3にプロフィールデータを保存
+      await s3
+        .putObject({
+          Bucket: BUCKET_NAME,
+          Key: `profiles/${input.userId}.json`,
+          Body: JSON.stringify(profileData),
+          ContentType: "application/json",
+        })
+        .promise();
 
-      const [rows] = await connection.execute(
-        "SELECT * FROM user_profiles WHERE cognito_user_id = ?",
-        [input.userId]
-      );
-
-      if (rows[0]) {
-        return {
-          id: rows[0].id.toString(),
-          cognito_user_id: rows[0].cognito_user_id,
-          display_name: rows[0].display_name,
-          bio: rows[0].bio,
-          favorite_ingredients: JSON.parse(
-            rows[0].favorite_ingredients || "[]"
-          ),
-          refrigerator_brand: rows[0].refrigerator_brand,
-          created_at: rows[0].created_at,
-          updated_at: rows[0].updated_at,
-        };
-      }
-      throw new Error("Profile not found");
+      return profileData;
     }
 
     // REST APIの場合
     switch (event.httpMethod) {
       case "GET":
         if (event.pathParameters && event.pathParameters.userId) {
-          const [rows] = await connection.execute(
-            "SELECT * FROM user_profiles WHERE cognito_user_id = ?",
-            [event.pathParameters.userId]
-          );
-          return {
-            statusCode: 200,
-            headers: {
-              "Content-Type": "application/json",
-              "Access-Control-Allow-Origin": "*",
-            },
-            body: JSON.stringify(rows[0] || null),
-          };
-        }
-        break;
+          try {
+            const data = await s3
+              .getObject({
+                Bucket: BUCKET_NAME,
+                Key: `profiles/${event.pathParameters.userId}.json`,
+              })
+              .promise();
 
-      case "POST":
-        if (event.body) {
-          const profile = JSON.parse(event.body);
-          await connection.execute(
-            `INSERT INTO user_profiles 
-            (cognito_user_id, display_name, bio, favorite_ingredients, refrigerator_brand) 
-            VALUES (?, ?, ?, ?, ?)
-            ON DUPLICATE KEY UPDATE 
-            display_name = VALUES(display_name),
-            bio = VALUES(bio),
-            favorite_ingredients = VALUES(favorite_ingredients),
-            refrigerator_brand = VALUES(refrigerator_brand)`,
-            [
-              profile.userId,
-              profile.displayName,
-              profile.bio,
-              JSON.stringify(profile.favoriteIngredients),
-              profile.refrigeratorBrand,
-            ]
-          );
-
-          const [rows] = await connection.execute(
-            "SELECT * FROM user_profiles WHERE cognito_user_id = ?",
-            [profile.userId]
-          );
-
-          if (rows[0]) {
             return {
               statusCode: 200,
               headers: {
                 "Content-Type": "application/json",
                 "Access-Control-Allow-Origin": "*",
               },
-              body: JSON.stringify({
-                id: rows[0].id.toString(),
-                cognito_user_id: rows[0].cognito_user_id,
-                display_name: rows[0].display_name,
-                bio: rows[0].bio,
-                favorite_ingredients: JSON.parse(
-                  rows[0].favorite_ingredients || "[]"
-                ),
-                refrigerator_brand: rows[0].refrigerator_brand,
-                created_at: rows[0].created_at,
-                updated_at: rows[0].updated_at,
-              }),
+              body: data.Body.toString(),
             };
+          } catch (error) {
+            if (error.code === "NoSuchKey") {
+              return {
+                statusCode: 404,
+                headers: {
+                  "Content-Type": "application/json",
+                  "Access-Control-Allow-Origin": "*",
+                },
+                body: JSON.stringify({ error: "Profile not found" }),
+              };
+            }
+            throw error;
           }
+        }
+        break;
+
+      case "POST":
+        if (event.body) {
+          const profile = JSON.parse(event.body);
+          const profileData = {
+            id: profile.userId,
+            cognito_user_id: profile.userId,
+            display_name: profile.displayName,
+            bio: profile.bio,
+            favorite_ingredients: profile.favoriteIngredients,
+            refrigerator_brand: profile.refrigeratorBrand,
+            updated_at: new Date().toISOString(),
+          };
+
+          await s3
+            .putObject({
+              Bucket: BUCKET_NAME,
+              Key: `profiles/${profile.userId}.json`,
+              Body: JSON.stringify(profileData),
+              ContentType: "application/json",
+            })
+            .promise();
+
           return {
-            statusCode: 404,
+            statusCode: 200,
             headers: {
               "Content-Type": "application/json",
               "Access-Control-Allow-Origin": "*",
             },
-            body: JSON.stringify({ error: "Profile not found" }),
+            body: JSON.stringify(profileData),
           };
         }
         break;
 
       case "DELETE":
         if (event.pathParameters && event.pathParameters.userId) {
-          await connection.execute(
-            "DELETE FROM user_profiles WHERE cognito_user_id = ?",
-            [event.pathParameters.userId]
-          );
+          await s3
+            .deleteObject({
+              Bucket: BUCKET_NAME,
+              Key: `profiles/${event.pathParameters.userId}.json`,
+            })
+            .promise();
+
           return {
             statusCode: 200,
             headers: {
@@ -193,9 +163,5 @@ exports.handler = async (event) => {
   } catch (error) {
     console.error("Error:", error);
     throw error;
-  } finally {
-    if (connection) {
-      await connection.end();
-    }
   }
 };

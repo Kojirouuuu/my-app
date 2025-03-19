@@ -56,13 +56,19 @@ export default function ProfileScreen() {
 
   const loadProfileData = async (userId: string) => {
     try {
-      const response = (await client.graphql({
-        query: getProfile,
-        variables: { userId },
-      })) as GraphQLResult<any>;
+      const path = `profile/${userId}/data.json`;
+      const { url } = await getUrl({
+        key: path,
+        options: {
+          accessLevel: "guest",
+          validateObjectExistence: true,
+          expiresIn: 3600,
+        },
+      });
 
-      if (response.data?.getProfile) {
-        const data = response.data.getProfile;
+      const response = await fetch(url.toString());
+      if (response.ok) {
+        const data = await response.json();
         setDisplayName(data.display_name || "");
         setBio(data.bio || "");
         setFavoriteIngredients(data.favorite_ingredients || []);
@@ -74,8 +80,12 @@ export default function ProfileScreen() {
         setEditedUsername(data.display_name || "");
         setEditedBio(data.bio || "");
       }
-    } catch (error) {
-      console.error("Error loading profile data:", error);
+    } catch (error: any) {
+      if (error.name === "ResourceNotFoundException") {
+        console.log("No profile data found");
+      } else {
+        console.error("Error loading profile data:", error);
+      }
     }
   };
 
@@ -176,28 +186,35 @@ export default function ProfileScreen() {
         .map((item) => item.trim())
         .filter((item) => item.length > 0);
 
-      const response = (await client.graphql({
-        query: updateProfile,
-        variables: {
-          input: {
-            userId: user.username,
-            displayName: editedUsername,
-            bio: editedBio,
-            favoriteIngredients: newFavoriteIngredients,
-            refrigeratorBrand,
+      const profileData = {
+        display_name: editedUsername,
+        bio: editedBio,
+        favorite_ingredients: newFavoriteIngredients,
+        refrigeratorBrand,
+      };
+
+      const path = `profile/${user.username}/data.json`;
+      const data = new Blob([JSON.stringify(profileData)], {
+        type: "application/json",
+      });
+
+      await uploadData({
+        key: path,
+        data,
+        options: {
+          accessLevel: "guest",
+          contentType: "application/json",
+          metadata: {
+            updatedAt: new Date().toISOString(),
           },
         },
-      })) as GraphQLResult<any>;
+      }).result;
 
-      if (response.data?.updateProfile) {
-        setDisplayName(editedUsername);
-        setBio(editedBio);
-        setFavoriteIngredients(newFavoriteIngredients);
-        setIsEditModalVisible(false);
-        await loadProfileData(user.username);
-      } else {
-        Alert.alert("Error", "Failed to update profile");
-      }
+      setDisplayName(editedUsername);
+      setBio(editedBio);
+      setFavoriteIngredients(newFavoriteIngredients);
+      setIsEditModalVisible(false);
+      await loadProfileData(user.username);
     } catch (error) {
       console.error("Error saving profile:", error);
       Alert.alert("Error", "Failed to save profile changes");
