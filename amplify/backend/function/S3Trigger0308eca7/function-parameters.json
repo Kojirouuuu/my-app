@@ -16,5 +16,17 @@
       "cloudFormationParameterName": "rdsDatabase",
       "environmentVariableName": "RDS_DATABASE"
     }
+  ],
+  "cloudFormationParameterList": [
+    {
+      "ParameterType": "String",
+      "LogicalId": "vpcId",
+      "Description": "VPC ID where RDS is located"
+    },
+    {
+      "ParameterType": "CommaDelimitedList",
+      "LogicalId": "subnetIds",
+      "Description": "Subnet IDs where Lambda function will be placed"
+    }
   ]
 }

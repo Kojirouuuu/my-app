@@ -42,18 +42,40 @@ export default function HomeScreen() {
       setIsLoadingItems(true);
       const { username } = await getCurrentUser();
 
-      // TODO: APIを実装して最新の検出アイテムを取得
-      // 現在はモックデータを使用
-      const mockItems: DetectedItem[] = [
-        { item_name: "apple", confidence: 0.95, image_url: "" },
-        { item_name: "milk", confidence: 0.88, image_url: "" },
-        { item_name: "bread", confidence: 0.92, image_url: "" },
-      ];
+      // ユーザーのingredientsディレクトリから最新のJSONファイルを取得
+      const { items } = await list({
+        prefix: `public/ingredients/${username}/`,
+      });
 
-      setDetectedItems(mockItems);
+      if (items.length > 0) {
+        // 最新のファイルを取得（lastModifiedでソート）
+        const latestFile = items.sort((a, b) => {
+          const dateA = a.lastModified ? new Date(a.lastModified).getTime() : 0;
+          const dateB = b.lastModified ? new Date(b.lastModified).getTime() : 0;
+          return dateB - dateA;
+        })[0];
+
+        const { url } = await getUrl({
+          key: latestFile.key,
+          options: {
+            accessLevel: "guest",
+            validateObjectExistence: true,
+            expiresIn: 3600,
+          },
+        });
+
+        const response = await fetch(url.toString());
+        if (response.ok) {
+          const data = await response.json();
+          setDetectedItems(data.items);
+        }
+      } else {
+        setDetectedItems([]);
+      }
     } catch (error) {
       console.error("Error loading items:", error);
       Alert.alert("Error", "Failed to load detected items");
+      setDetectedItems([]);
     } finally {
       setIsLoadingItems(false);
     }

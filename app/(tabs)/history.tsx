@@ -1,198 +1,185 @@
-import { useState, useEffect } from "react";
 import {
   View,
   Text,
-  StyleSheet,
-  FlatList,
   Image,
-  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
   ActivityIndicator,
-  Alert,
-  Modal,
+  Dimensions,
 } from "react-native";
-import { getCurrentUser } from "aws-amplify/auth";
+import { useEffect, useState } from "react";
 import { list, getUrl } from "aws-amplify/storage";
-import { format } from "date-fns";
-import { Calendar, Image as ImageIcon, X } from "lucide-react-native";
-
-import React from "react";
+import { getCurrentUser } from "aws-amplify/auth";
+import { router } from "expo-router";
 
 interface FridgeImage {
   key: string;
-  uploadedAt: string;
   url: string;
-  detectedItems?: string[];
+  lastModified: string | Date;
+  detectionResult?: {
+    items: {
+      item_name: string;
+      confidence: number;
+    }[];
+  };
 }
 
 export default function HistoryScreen() {
   const [images, setImages] = useState<FridgeImage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedImage, setSelectedImage] = useState<FridgeImage | null>(null);
 
   useEffect(() => {
-    loadFridgeImages();
+    loadHistory();
   }, []);
 
-  const loadFridgeImages = async () => {
+  const loadHistory = async () => {
     try {
       setIsLoading(true);
       const { username } = await getCurrentUser();
 
-      // S3から画像リストを取得
+      // 冷蔵庫の画像を取得
       const { items } = await list({
         prefix: `fridge-contents/${username}/`,
       });
 
-      // 画像URLと日付情報を取得
-      const imagePromises = items.map(async (item) => {
-        const { url } = await getUrl({
-          key: item.key,
-          options: {
-            accessLevel: "guest",
-            validateObjectExistence: true,
-            expiresIn: 3600,
-          },
-        });
-
-        // ファイル名から日付を抽出（YYYYMMDD_N.jpg形式）
-        const dateStr = item.key.split("/")[2].split("_")[0];
-        const formattedDate = format(
-          new Date(
-            parseInt(dateStr.substring(0, 4)),
-            parseInt(dateStr.substring(4, 6)) - 1,
-            parseInt(dateStr.substring(6, 8))
-          ),
-          "yyyy/MM/dd"
-        );
-
-        return {
-          key: item.key,
-          uploadedAt: formattedDate,
-          url: url.toString(),
-          // TODO: 検出アイテムをAPIから取得
-          detectedItems: ["apple", "milk", "bread"],
-        };
+      // 最新順にソート
+      const sortedItems = items.sort((a, b) => {
+        const dateA = a.lastModified ? new Date(a.lastModified).getTime() : 0;
+        const dateB = b.lastModified ? new Date(b.lastModified).getTime() : 0;
+        return dateB - dateA;
       });
 
-      const imageList = await Promise.all(imagePromises);
-      // 日付の新しい順にソート
-      setImages(
-        imageList.sort((a, b) => b.uploadedAt.localeCompare(a.uploadedAt))
+      // 画像URLを取得
+      const imagesWithUrls = await Promise.all(
+        sortedItems.map(async (item) => {
+          const { url } = await getUrl({
+            key: item.key,
+            options: {
+              accessLevel: "guest",
+              validateObjectExistence: true,
+              expiresIn: 3600,
+            },
+          });
+
+          // 対応する検出結果のJSONファイルを取得
+          const jsonKey = item.key.replace(".jpg", ".json");
+          try {
+            const { url: jsonUrl } = await getUrl({
+              key: jsonKey,
+              options: {
+                accessLevel: "guest",
+                validateObjectExistence: true,
+                expiresIn: 3600,
+              },
+            });
+
+            const response = await fetch(jsonUrl.toString());
+            if (response.ok) {
+              const data = await response.json();
+              return {
+                key: item.key,
+                url: url.toString(),
+                lastModified: item.lastModified || "",
+                detectionResult: data,
+              };
+            }
+          } catch (error) {
+            console.log("No detection result found for:", jsonKey);
+          }
+
+          return {
+            key: item.key,
+            url: url.toString(),
+            lastModified: item.lastModified || "",
+          };
+        })
       );
+
+      setImages(imagesWithUrls);
     } catch (error) {
-      console.error("Error loading fridge images:", error);
-      Alert.alert("Error", "Failed to load fridge images");
+      console.error("Error loading history:", error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const renderImageItem = ({ item }: { item: FridgeImage }) => (
-    <TouchableOpacity
-      style={styles.imageCard}
-      onPress={() => setSelectedImage(item)}
-    >
-      <Image source={{ uri: item.url }} style={styles.thumbnail} />
-      <View style={styles.imageInfo}>
-        <View style={styles.dateContainer}>
-          <Calendar size={16} color="#666" />
-          <Text style={styles.dateText}>{item.uploadedAt}</Text>
-        </View>
-        <Text style={styles.itemsText}>
-          {item.detectedItems?.join(", ") || "No items detected"}
-        </Text>
-      </View>
-    </TouchableOpacity>
-  );
-
-  const ImageDetailModal = () => (
-    <Modal
-      visible={!!selectedImage}
-      transparent={true}
-      animationType="fade"
-      onRequestClose={() => setSelectedImage(null)}
-    >
-      <View style={styles.modalContainer}>
-        <View style={styles.modalContent}>
-          <TouchableOpacity
-            style={styles.closeButton}
-            onPress={() => setSelectedImage(null)}
-          >
-            <X size={24} color="#000" />
-          </TouchableOpacity>
-
-          {selectedImage && (
-            <>
-              <Image
-                source={{ uri: selectedImage.url }}
-                style={styles.modalImage}
-                resizeMode="contain"
-              />
-              <View style={styles.modalInfo}>
-                <Text style={styles.modalDate}>{selectedImage.uploadedAt}</Text>
-                <Text style={styles.modalItems}>
-                  Detected Items: {selectedImage.detectedItems?.join(", ")}
-                </Text>
-              </View>
-            </>
-          )}
-        </View>
-      </View>
-    </Modal>
-  );
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleString("en-US", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
 
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#4CAF50" />
-        <Text style={styles.loadingText}>Loading fridge history...</Text>
+        <Text style={styles.loadingText}>Loading history...</Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      {/* <Text style={styles.title}>Fridge History</Text> */}
-
+    <ScrollView style={styles.container}>
+      <Text style={styles.title}>Fridge History</Text>
       {images.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <ImageIcon size={48} color="#666" />
-          <Text style={styles.emptyText}>No fridge photos yet</Text>
+          <Text style={styles.emptyText}>No history available</Text>
         </View>
       ) : (
-        <FlatList
-          data={images}
-          renderItem={renderImageItem}
-          keyExtractor={(item) => item.key}
-          contentContainerStyle={styles.listContainer}
-          showsVerticalScrollIndicator={false}
-        />
+        <View style={styles.gridContainer}>
+          {images.map((image, index) => (
+            <View key={index} style={styles.gridItem}>
+              <Image
+                source={{ uri: image.url }}
+                style={styles.fridgeImage}
+                resizeMode="cover"
+              />
+              <View style={styles.itemInfo}>
+                <Text style={styles.dateText} numberOfLines={1}>
+                  {formatDate(image.lastModified.toString())}
+                </Text>
+                {image.detectionResult && (
+                  <Text style={styles.itemCount}>
+                    {image.detectionResult.items.length} items
+                  </Text>
+                )}
+              </View>
+            </View>
+          ))}
+        </View>
       )}
-
-      <ImageDetailModal />
-    </View>
+    </ScrollView>
   );
 }
+
+const { width } = Dimensions.get("window");
+const itemWidth = width / 3;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
-    padding: 20,
+    backgroundColor: "#ffffff",
+    padding: 8,
   },
   title: {
     fontFamily: "Inter-Bold",
     fontSize: 24,
-    marginBottom: 20,
+    marginBottom: 16,
+    paddingHorizontal: 8,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#fff",
+    gap: 16,
+    backgroundColor: "#ffffff",
   },
   loadingText: {
-    marginTop: 12,
     fontFamily: "Inter-Regular",
     fontSize: 16,
     color: "#666",
@@ -201,89 +188,44 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    gap: 12,
+    padding: 32,
   },
   emptyText: {
     fontFamily: "Inter-Regular",
     fontSize: 16,
     color: "#666",
   },
-  listContainer: {
-    gap: 16,
-  },
-  imageCard: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    overflow: "hidden",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  thumbnail: {
-    width: "100%",
-    height: 200,
-    backgroundColor: "#f5f5f5",
-  },
-  imageInfo: {
-    padding: 16,
-    gap: 8,
-  },
-  dateContainer: {
+  gridContainer: {
     flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
+    flexWrap: "wrap",
+    gap: 1,
+  },
+  gridItem: {
+    width: itemWidth,
+    aspectRatio: 1,
+    backgroundColor: "#ffffff",
+  },
+  fridgeImage: {
+    width: "100%",
+    height: "100%",
+  },
+  itemInfo: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 4,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   dateText: {
     fontFamily: "Inter-Regular",
-    fontSize: 14,
-    color: "#666",
+    fontSize: 12,
+    color: "#ffffff",
   },
-  itemsText: {
+  itemCount: {
     fontFamily: "Inter-Regular",
-    fontSize: 14,
-    color: "#333",
-  },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.8)",
-    justifyContent: "center",
-    padding: 20,
-  },
-  modalContent: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    overflow: "hidden",
-  },
-  closeButton: {
-    position: "absolute",
-    top: 12,
-    right: 12,
-    zIndex: 1,
-    backgroundColor: "#fff",
-    borderRadius: 20,
-    padding: 8,
-  },
-  modalImage: {
-    width: "100%",
-    height: 400,
-    backgroundColor: "#f5f5f5",
-  },
-  modalInfo: {
-    padding: 16,
-    gap: 8,
-  },
-  modalDate: {
-    fontFamily: "Inter-Bold",
-    fontSize: 16,
-  },
-  modalItems: {
-    fontFamily: "Inter-Regular",
-    fontSize: 14,
-    color: "#666",
+    fontSize: 10,
+    color: "#ffffff",
+    opacity: 0.8,
   },
 });

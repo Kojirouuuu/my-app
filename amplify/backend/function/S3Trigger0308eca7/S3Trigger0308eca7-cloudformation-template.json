@@ -22,6 +22,12 @@
     },
     "rdsDatabase": {
       "Type": "String"
+    },
+    "vpcId": {
+      "Type": "String"
+    },
+    "subnetIds": {
+      "Type": "CommaDelimitedList"
     }
   },
   "Conditions": {
@@ -80,6 +86,19 @@
             }
           }
         },
+        "VpcConfig": {
+          "SecurityGroupIds": [
+            {
+              "Fn::GetAtt": [
+                "LambdaSecurityGroup",
+                "GroupId"
+              ]
+            }
+          ],
+          "SubnetIds": {
+            "Ref": "subnetIds"
+          }
+        },
         "Role": {
           "Fn::GetAtt": [
             "LambdaExecutionRole",
@@ -96,6 +115,24 @@
             "Ref": "s3Key"
           }
         }
+      }
+    },
+    "LambdaSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Security group for Lambda function to access RDS",
+        "VpcId": {
+          "Ref": "vpcId"
+        },
+        "SecurityGroupEgress": [
+          {
+            "Description": "Allow all outbound traffic",
+            "IpProtocol": "-1",
+            "FromPort": -1,
+            "ToPort": -1,
+            "CidrIp": "0.0.0.0/0"
+          }
+        ]
       }
     },
     "LambdaExecutionRole": {
@@ -125,13 +162,9 @@
             {
               "Effect": "Allow",
               "Principal": {
-                "Service": [
-                  "lambda.amazonaws.com"
-                ]
+                "Service": "lambda.amazonaws.com"
               },
-              "Action": [
-                "sts:AssumeRole"
-              ]
+              "Action": "sts:AssumeRole"
             }
           ]
         }

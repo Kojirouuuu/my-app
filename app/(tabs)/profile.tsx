@@ -190,7 +190,7 @@ export default function ProfileScreen() {
         display_name: editedUsername,
         bio: editedBio,
         favorite_ingredients: newFavoriteIngredients,
-        refrigeratorBrand,
+        refrigerator_brand: refrigeratorBrand,
       };
 
       const path = `profile/${user.username}/data.json`;

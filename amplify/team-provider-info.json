@@ -18,7 +18,7 @@
       "function": {
         "S3Trigger0308eca7": {
           "deploymentBucketName": "amplify-myapp-dev-44405-deployment",
-          "s3Key": "amplify-builds/S3Trigger0308eca7-5042354c4e7955744436-build.zip",
+          "s3Key": "amplify-builds/S3Trigger0308eca7-447a6b686b5039743848-build.zip",
           "rdsHost": "database-1.czmmgmk2enga.ap-northeast-1.rds.amazonaws.com",
           "rdsUser": "admin",
           "rdsPassword": "MToKGR4hBoQzhKXUCuxO",
