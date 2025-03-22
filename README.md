@@ -66,3 +66,4 @@ npm run reset-project
 
 - [Expo on GitHub](https://github.com/expo/expo): オープンソースプラットフォームの閲覧と貢献
 - [Discord community](https://chat.expo.dev): Expo ユーザーとのチャットや質問
+# hackathon-app
