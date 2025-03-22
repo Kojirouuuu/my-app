@@ -19,7 +19,7 @@ import { useEffect } from "react";
 import ParallaxScrollView from "@/../components/layouts/ParallaxScrollView";
 import { useState } from "react";
 
-Amplify.configure(awsconfig);
+// Amplifyの設定は_layout.tsxで行うため、ここでの設定は不要
 
 interface DetectedItem {
   item_name: string;

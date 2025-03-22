@@ -1,78 +1,113 @@
-const mysql = require("mysql2/promise");
+const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
+const {
+  DynamoDBDocumentClient,
+  PutCommand,
+  DeleteCommand,
+  QueryCommand,
+} = require("@aws-sdk/lib-dynamodb");
 
-const pool = mysql.createPool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
-});
+const client = new DynamoDBClient();
+const docClient = DynamoDBDocumentClient.from(client);
 
 exports.handler = async (event) => {
-  const { follower_id, following_id, action } = JSON.parse(event.body);
-
   try {
-    const connection = await pool.getConnection();
+    const { follower_id, following_id, action } = JSON.parse(event.body);
 
-    try {
-      if (action === "follow") {
-        const [result] = await connection.execute(
-          "INSERT INTO follows (follower_id, following_id) VALUES (?, ?)",
-          [follower_id, following_id]
+    switch (action) {
+      case "follow":
+        await docClient.send(
+          new PutCommand({
+            TableName: "follows",
+            Item: {
+              follower_id,
+              following_id,
+              created_at: new Date().toISOString(),
+            },
+          })
+        );
+        return {
+          statusCode: 200,
+          body: JSON.stringify({ message: "Followed successfully" }),
+        };
+
+      case "unfollow":
+        await docClient.send(
+          new DeleteCommand({
+            TableName: "follows",
+            Key: {
+              follower_id,
+              following_id,
+            },
+          })
+        );
+        return {
+          statusCode: 200,
+          body: JSON.stringify({ message: "Unfollowed successfully" }),
+        };
+
+      case "checkFollow":
+        const result = await docClient.send(
+          new QueryCommand({
+            TableName: "follows",
+            KeyConditionExpression:
+              "follower_id = :follower_id AND following_id = :following_id",
+            ExpressionAttributeValues: {
+              ":follower_id": follower_id,
+              ":following_id": following_id,
+            },
+          })
+        );
+        return {
+          statusCode: 200,
+          body: JSON.stringify({ isFollowing: result.Items.length > 0 }),
+        };
+
+      case "getFollowing":
+        const followingResult = await docClient.send(
+          new QueryCommand({
+            TableName: "follows",
+            KeyConditionExpression: "follower_id = :follower_id",
+            ExpressionAttributeValues: {
+              ":follower_id": follower_id,
+            },
+          })
+        );
+
+        // フォローしているユーザーのプロフィール情報を取得
+        const following = await Promise.all(
+          followingResult.Items.map(async (item) => {
+            const profileResult = await docClient.send(
+              new QueryCommand({
+                TableName: "profiles",
+                KeyConditionExpression: "user_id = :user_id",
+                ExpressionAttributeValues: {
+                  ":user_id": item.following_id,
+                },
+              })
+            );
+            return {
+              following_id: item.following_id,
+              ...profileResult.Items[0],
+            };
+          })
         );
 
         return {
           statusCode: 200,
-          body: JSON.stringify({
-            message: "Successfully followed user",
-            followId: result.insertId,
-          }),
+          body: JSON.stringify({ following }),
         };
-      } else if (action === "unfollow") {
-        await connection.execute(
-          "DELETE FROM follows WHERE follower_id = ? AND following_id = ?",
-          [follower_id, following_id]
-        );
 
+      default:
         return {
-          statusCode: 200,
-          body: JSON.stringify({
-            message: "Successfully unfollowed user",
-          }),
+          statusCode: 400,
+          body: JSON.stringify({ error: "Invalid action" }),
         };
-      } else if (action === "getFollowing") {
-        const [rows] = await connection.execute(
-          `SELECT f.following_id, p.display_name, p.bio, p.refrigerator_brand,
-           (SELECT image_url FROM fridge_contents 
-            WHERE user_id = f.following_id 
-            ORDER BY created_at DESC LIMIT 1) as latest_fridge_image
-           FROM follows f
-           LEFT JOIN profiles p ON f.following_id = p.cognito_user_id
-           WHERE f.follower_id = ?
-           ORDER BY f.created_at DESC`,
-          [follower_id]
-        );
-
-        return {
-          statusCode: 200,
-          body: JSON.stringify({
-            following: rows,
-          }),
-        };
-      }
-    } finally {
-      connection.release();
     }
   } catch (error) {
     console.error("Error:", error);
     return {
       statusCode: 500,
-      body: JSON.stringify({
-        message: "Error processing request",
-        error: error.message,
-      }),
+      body: JSON.stringify({ error: "Internal server error" }),
     };
   }
 };

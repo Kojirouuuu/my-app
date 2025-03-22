@@ -19,7 +19,7 @@
       "function": {
         "S3Triggere685b0a0": {
           "deploymentBucketName": "amplify-hackthonapp-dev-b221b-deployment",
-          "s3Key": "amplify-builds/S3Triggere685b0a0-54777830694b764d6271-build.zip"
+          "s3Key": "amplify-builds/S3Triggere685b0a0-37466533497034595a73-build.zip"
         }
       },
       "storage": {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -9,6 +9,9 @@ import {
   ActivityIndicator,
   Alert,
   Modal,
+  Animated,
+  PanResponder,
+  Dimensions,
 } from "react-native";
 import { getCurrentUser } from "aws-amplify/auth";
 import { list, getUrl } from "aws-amplify/storage";
@@ -24,10 +27,47 @@ interface FridgeImage {
   detectedItems?: string[];
 }
 
+const SCREEN_WIDTH = Dimensions.get("window").width;
+const SWIPE_THRESHOLD = 0.25 * SCREEN_WIDTH;
+
 export default function HistoryScreen() {
   const [images, setImages] = useState<FridgeImage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState<FridgeImage | null>(null);
+  const position = useRef(new Animated.ValueXY()).current;
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onPanResponderMove: (_, gesture) => {
+        position.setValue({ x: gesture.dx, y: 0 });
+      },
+      onPanResponderRelease: (_, gesture) => {
+        if (gesture.dx > SWIPE_THRESHOLD) {
+          Animated.timing(position, {
+            toValue: { x: SCREEN_WIDTH, y: 0 },
+            duration: 250,
+            useNativeDriver: false,
+          }).start(() => {
+            position.setValue({ x: 0, y: 0 });
+          });
+        } else if (gesture.dx < -SWIPE_THRESHOLD) {
+          Animated.timing(position, {
+            toValue: { x: -SCREEN_WIDTH, y: 0 },
+            duration: 250,
+            useNativeDriver: false,
+          }).start(() => {
+            position.setValue({ x: 0, y: 0 });
+          });
+        } else {
+          Animated.spring(position, {
+            toValue: { x: 0, y: 0 },
+            useNativeDriver: false,
+          }).start();
+        }
+      },
+    })
+  ).current;
 
   useEffect(() => {
     loadFridgeImages();
@@ -87,23 +127,39 @@ export default function HistoryScreen() {
     }
   };
 
-  const renderImageItem = ({ item }: { item: FridgeImage }) => (
-    <TouchableOpacity
-      style={styles.imageCard}
-      onPress={() => setSelectedImage(item)}
-    >
-      <Image source={{ uri: item.url }} style={styles.thumbnail} />
-      <View style={styles.imageInfo}>
-        <View style={styles.dateContainer}>
-          <Calendar size={16} color="#666" />
-          <Text style={styles.dateText}>{item.uploadedAt}</Text>
-        </View>
-        <Text style={styles.itemsText} numberOfLines={2}>
-          {item.detectedItems?.join(", ") || "No items detected"}
-        </Text>
-      </View>
-    </TouchableOpacity>
-  );
+  const renderImageItem = ({ item }: { item: FridgeImage }) => {
+    const cardStyle = position.getLayout();
+    const rotateCard = position.x.interpolate({
+      inputRange: [-SCREEN_WIDTH * 1.5, 0, SCREEN_WIDTH * 1.5],
+      outputRange: ["-120deg", "0deg", "120deg"],
+    });
+
+    return (
+      <Animated.View
+        style={[
+          styles.imageCard,
+          cardStyle,
+          {
+            transform: [{ translateX: position.x }, { rotate: rotateCard }],
+          },
+        ]}
+        {...panResponder.panHandlers}
+      >
+        <TouchableOpacity onPress={() => setSelectedImage(item)}>
+          <Image source={{ uri: item.url }} style={styles.thumbnail} />
+          <View style={styles.imageInfo}>
+            <View style={styles.dateContainer}>
+              <Calendar size={16} color="#666" />
+              <Text style={styles.dateText}>{item.uploadedAt}</Text>
+            </View>
+            <Text style={styles.itemsText} numberOfLines={2}>
+              {item.detectedItems?.join(", ") || "No items detected"}
+            </Text>
+          </View>
+        </TouchableOpacity>
+      </Animated.View>
+    );
+  };
 
   const ImageDetailModal = () => (
     <Modal
@@ -166,8 +222,7 @@ export default function HistoryScreen() {
           keyExtractor={(item) => item.key}
           contentContainerStyle={styles.listContainer}
           showsVerticalScrollIndicator={false}
-          numColumns={2}
-          columnWrapperStyle={styles.row}
+          numColumns={1}
         />
       )}
 
@@ -194,12 +249,8 @@ const styles = StyleSheet.create({
   listContainer: {
     padding: 16,
   },
-  row: {
-    justifyContent: "space-between",
-    marginBottom: 16,
-  },
   imageCard: {
-    width: "48%",
+    width: "100%",
     backgroundColor: "#fff",
     borderRadius: 16,
     shadowColor: "#000",
@@ -211,10 +262,12 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 5,
     overflow: "hidden",
+    marginBottom: 16,
+    position: "relative",
   },
   thumbnail: {
     width: "100%",
-    height: 200,
+    height: 300,
     backgroundColor: "#f5f5f5",
   },
   imageInfo: {

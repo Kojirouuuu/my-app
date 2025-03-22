@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Stack, Redirect, Slot } from "expo-router";
+import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import {
   useFonts,
@@ -10,6 +10,8 @@ import { useFrameworkReady } from "@/hooks/useFrameworkReady";
 import { SplashScreen } from "expo-router";
 import { AuthProvider, useAuth } from "@/../contexts/AuthContext";
 import { ToastProvider } from "@/contexts/ToastContext";
+import { Amplify } from "aws-amplify";
+import config from "../amplifyconfiguration.json";
 // import { Amplify } from "aws-amplify";
 // import awsconfig from "../src/aws-exports";
 
@@ -18,8 +20,12 @@ import React from "react";
 // Prevent splash screen from auto-hiding
 SplashScreen.preventAutoHideAsync();
 
-// Amplifyの設定
-// Amplify.configure(awsconfig);
+// Amplifyの初期化
+try {
+  Amplify.configure(config);
+} catch (error) {
+  console.error("Amplify configuration error:", error);
+}
 
 function RootLayoutNav() {
   useFrameworkReady();

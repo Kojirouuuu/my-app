@@ -1,0 +1,45 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "DynamoDB tables for follows functionality"
+
+Resources:
+  FollowsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: follows
+      AttributeDefinitions:
+        - AttributeName: follower_id
+          AttributeType: S
+        - AttributeName: following_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: follower_id
+          KeyType: HASH
+        - AttributeName: following_id
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+
+  ProfilesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: profiles
+      AttributeDefinitions:
+        - AttributeName: user_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: user_id
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+
+Outputs:
+  FollowsTableName:
+    Description: Name of the follows table
+    Value: !Ref FollowsTable
+  ProfilesTableName:
+    Description: Name of the profiles table
+    Value: !Ref ProfilesTable
