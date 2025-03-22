@@ -190,7 +190,7 @@ export default function ProfileScreen() {
         display_name: editedUsername,
         bio: editedBio,
         favorite_ingredients: newFavoriteIngredients,
-        refrigeratorBrand,
+        refrigerator_brand: refrigeratorBrand,
       };
 
       const path = `profile/${user.username}/data.json`;
@@ -247,7 +247,7 @@ export default function ProfileScreen() {
         </TouchableOpacity>
 
         <Text style={styles.username}>{displayName || username || "User"}</Text>
-        {email && <Text style={styles.email}>{email}</Text>}
+        {/*{email && <Text style={styles.email}>{email}</Text>}*/}
       </View>
 
       <View style={styles.content}>
@@ -413,7 +413,7 @@ const styles = StyleSheet.create({
   username: {
     fontFamily: "Inter-Bold",
     fontSize: 24,
-    marginTop: 16,
+    marginTop: 8,
   },
   email: {
     fontFamily: "Inter-Regular",
