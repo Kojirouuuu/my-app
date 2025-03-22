@@ -1,11 +1,11 @@
 import { StyleSheet, Image, Platform } from "react-native";
 
-import { Collapsible } from "@/components/layouts/Collapsible";
-import { ExternalLink } from "@/components/common/ExternalLink";
-import ParallaxScrollView from "@/components/layouts/ParallaxScrollView";
-import { ThemedText } from "@/components/ui/ThemedText";
-import { ThemedView } from "@/components/ui/ThemedView";
-import { IconSymbol } from "@/components/ui/IconSymbol";
+import { Collapsible } from "@/../components/layouts/Collapsible";
+import { ExternalLink } from "@/../components/common/ExternalLink";
+import ParallaxScrollView from "@/../components/layouts/ParallaxScrollView";
+import { ThemedText } from "@/../components/ui/ThemedText";
+import { ThemedView } from "@/../components/ui/ThemedView";
+import { IconSymbol } from "@/../components/ui/IconSymbol";
 
 export default function TabTwoScreen() {
   return (
@@ -22,6 +22,10 @@ export default function TabTwoScreen() {
     >
       <ThemedView style={styles.titleContainer}>
         <ThemedText type="title">Explore</ThemedText>
+        <ThemedText>Welcome to the Explore tab!</ThemedText>
+        <ExternalLink href="https://reactnative.dev/docs/images">
+          Learn more about images in React Native
+        </ExternalLink>
       </ThemedView>
       <ThemedText>
         This app includes example code to help you get started.
@@ -56,10 +60,6 @@ export default function TabTwoScreen() {
           <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to
           provide files for different screen densities
         </ThemedText>
-        <Image
-          source={require("@/assets/images/react-logo.png")}
-          style={{ alignSelf: "center" }}
-        />
         <ExternalLink href="https://reactnative.dev/docs/images">
           <ThemedText type="link">Learn more</ThemedText>
         </ExternalLink>

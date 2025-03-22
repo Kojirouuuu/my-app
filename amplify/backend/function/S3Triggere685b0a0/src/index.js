@@ -227,7 +227,17 @@ CREATE TABLE IF NOT EXISTS fridge_contents (
   image_url VARCHAR(255) NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   INDEX idx_user_id (user_id)
-)`;
+);
+
+CREATE TABLE IF NOT EXISTS follows (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  follower_id VARCHAR(255) NOT NULL,
+  following_id VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY unique_follow (follower_id, following_id),
+  INDEX idx_follower (follower_id),
+  INDEX idx_following (following_id)
+);`;
 
 exports.handler = async function (event) {
   console.log("Received S3 event:", JSON.stringify(event, null, 2));

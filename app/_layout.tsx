@@ -8,7 +8,8 @@ import {
 } from "@expo-google-fonts/inter";
 import { useFrameworkReady } from "@/hooks/useFrameworkReady";
 import { SplashScreen } from "expo-router";
-import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { AuthProvider, useAuth } from "@/../contexts/AuthContext";
+import { ToastProvider } from "@/contexts/ToastContext";
 // import { Amplify } from "aws-amplify";
 // import awsconfig from "../src/aws-exports";
 
@@ -57,8 +58,10 @@ function RootLayoutNav() {
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <RootLayoutNav />
-    </AuthProvider>
+    <ToastProvider>
+      <AuthProvider>
+        <RootLayoutNav />
+      </AuthProvider>
+    </ToastProvider>
   );
 }

@@ -1,14 +1,14 @@
 import { Tabs } from "expo-router";
 import React from "react";
 import { Platform, TouchableOpacity } from "react-native";
-import { Home, History, User } from "lucide-react-native";
+import { Home, Camera, History, User, Users } from "lucide-react-native";
 
-import { HapticTab } from "@/components/common/HapticTab";
-import { IconSymbol } from "@/components/ui/IconSymbol";
-import TabBarBackground from "@/components/ui/TabBarBackground";
-import { Colors } from "@/constants/Colors";
-import { useColorScheme } from "@/hooks/useColorScheme";
-import { useAuth } from "@/contexts/AuthContext";
+import { HapticTab } from "@/../components/common/HapticTab";
+import { IconSymbol } from "@/../components/ui/IconSymbol";
+import TabBarBackground from "@/../components/ui/TabBarBackground";
+import { Colors } from "@/../constants/Colors";
+import { useColorScheme } from "@/../hooks/useColorScheme";
+import { useAuth } from "@/../contexts/AuthContext";
 import { Redirect } from "expo-router";
 
 export default function TabLayout() {
@@ -41,21 +41,35 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Home",
+          title: "ホーム",
           tabBarIcon: ({ color }) => <Home size={24} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="camera"
+        options={{
+          title: "カメラ",
+          tabBarIcon: ({ color }) => <Camera size={24} color={color} />,
         }}
       />
       <Tabs.Screen
         name="history"
         options={{
-          title: "History",
+          title: "履歴",
           tabBarIcon: ({ color }) => <History size={24} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="following"
+        options={{
+          title: "フォロー",
+          tabBarIcon: ({ color }) => <Users size={24} color={color} />,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: "Profile",
+          title: "プロフィール",
           tabBarIcon: ({ color }) => <User size={24} color={color} />,
         }}
       />

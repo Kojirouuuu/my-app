@@ -14,7 +14,8 @@ import * as ImagePicker from "expo-image-picker";
 import { uploadData, downloadData, getUrl } from "aws-amplify/storage";
 import { getCurrentUser } from "aws-amplify/auth";
 import { router } from "expo-router";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/../contexts/AuthContext";
+import { useToast } from "@/contexts/ToastContext";
 import { useEffect, useState } from "react";
 import { generateClient } from "aws-amplify/api";
 import { updateProfile } from "../../src/graphql/mutations";
@@ -25,6 +26,7 @@ const client = generateClient();
 
 export default function ProfileScreen() {
   const { signOut: useAuthSignOut } = useAuth();
+  const toast = useToast();
   const [email, setEmail] = useState<string | null>(null);
   const [username, setUsername] = useState<string | null>(null);
   const [profileImageUri, setProfileImageUri] = useState<string | null>(null);
@@ -37,6 +39,8 @@ export default function ProfileScreen() {
   const [favoriteIngredientsText, setFavoriteIngredientsText] = useState("");
   const [refrigeratorBrand, setRefrigeratorBrand] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
     loadUserInfo();
@@ -47,10 +51,70 @@ export default function ProfileScreen() {
       const user = await getCurrentUser();
       setUsername(user.username);
       setEmail(user.username);
+      setCurrentUserId(user.username);
       await loadProfileImage(user.username);
       await loadProfileData(user.username);
+      await checkFollowStatus(user.username);
     } catch (error) {
       console.error("Error loading user info:", error);
+    }
+  };
+
+  const checkFollowStatus = async (userId: string) => {
+    try {
+      const response = await fetch(
+        process.env.EXPO_PUBLIC_API_URL + "/follow",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            follower_id: currentUserId,
+            following_id: userId,
+            action: "checkFollow",
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to check follow status");
+      }
+
+      const data = await response.json();
+      setIsFollowing(data.isFollowing);
+    } catch (error) {
+      console.error("Error checking follow status:", error);
+    }
+  };
+
+  const handleFollowToggle = async () => {
+    try {
+      const action = isFollowing ? "unfollow" : "follow";
+      const response = await fetch(
+        process.env.EXPO_PUBLIC_API_URL + "/follow",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            follower_id: currentUserId,
+            following_id: username,
+            action,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to toggle follow status");
+      }
+
+      setIsFollowing(!isFollowing);
+      toast.show(isFollowing ? "フォローを解除しました" : "フォローしました");
+    } catch (error) {
+      console.error("Error toggling follow:", error);
+      toast.show("フォロー状態の更新に失敗しました");
     }
   };
 
@@ -247,7 +311,21 @@ export default function ProfileScreen() {
         </TouchableOpacity>
 
         <Text style={styles.username}>{displayName || username || "User"}</Text>
-        {/*{email && <Text style={styles.email}>{email}</Text>}*/}
+        {currentUserId !== username && (
+          <TouchableOpacity
+            style={[styles.followButton, isFollowing && styles.followingButton]}
+            onPress={handleFollowToggle}
+          >
+            <Text
+              style={[
+                styles.followButtonText,
+                isFollowing && styles.followingButtonText,
+              ]}
+            >
+              {isFollowing ? "フォロー中" : "フォローする"}
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       <View style={styles.content}>
@@ -517,5 +595,25 @@ const styles = StyleSheet.create({
   saveButton: {
     marginTop: 20,
     marginBottom: 40,
+  },
+  followButton: {
+    backgroundColor: "#000",
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginTop: 8,
+  },
+  followingButton: {
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#000",
+  },
+  followButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "bold",
+  },
+  followingButtonText: {
+    color: "#000",
   },
 });

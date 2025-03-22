@@ -9,7 +9,7 @@ import {
 import { Link, router } from "expo-router";
 import { LogIn } from "lucide-react-native";
 import { signIn } from "aws-amplify/auth";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/../contexts/AuthContext";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");

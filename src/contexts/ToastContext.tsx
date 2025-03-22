@@ -1,48 +1,51 @@
 import React, { createContext, useContext, useState } from "react";
+import { View, Text, StyleSheet } from "react-native";
 
 interface ToastContextType {
-  show: (message: string, type: "success" | "error") => void;
+  show: (message: string) => void;
 }
 
-const ToastContext = createContext<ToastContextType | undefined>(undefined);
+const ToastContext = createContext<ToastContextType>({
+  show: () => {},
+});
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
-  const [toast, setToast] = useState<{
-    message: string;
-    type: "success" | "error";
-  } | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
 
-  const show = (message: string, type: "success" | "error") => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3000);
+  const show = (msg: string) => {
+    setMessage(msg);
+    setTimeout(() => setMessage(null), 3000);
   };
 
   return (
     <ToastContext.Provider value={{ show }}>
       {children}
-      {toast && (
-        <div
-          style={{
-            position: "fixed",
-            bottom: 20,
-            right: 20,
-            padding: "10px 20px",
-            backgroundColor: toast.type === "success" ? "#4CAF50" : "#f44336",
-            color: "white",
-            borderRadius: 5,
-          }}
-        >
-          {toast.message}
-        </div>
+      {message && (
+        <View style={styles.toast}>
+          <Text style={styles.text}>{message}</Text>
+        </View>
       )}
     </ToastContext.Provider>
   );
 }
 
 export function useToast() {
-  const context = useContext(ToastContext);
-  if (!context) {
-    throw new Error("useToast must be used within a ToastProvider");
-  }
-  return context;
+  return useContext(ToastContext);
 }
+
+const styles = StyleSheet.create({
+  toast: {
+    position: "absolute",
+    bottom: 50,
+    left: 20,
+    right: 20,
+    backgroundColor: "rgba(0,0,0,0.8)",
+    padding: 15,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  text: {
+    color: "white",
+    fontSize: 16,
+  },
+});
