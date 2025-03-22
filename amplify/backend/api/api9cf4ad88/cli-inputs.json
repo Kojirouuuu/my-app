@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "paths": {
+    "/fridge-history": {
+      "name": "/fridge-history",
+      "lambdaFunction": "S3Triggere685b0a0",
+      "permissions": {
+        "setting": "private",
+        "auth": [
+          "create",
+          "read",
+          "update",
+          "delete"
+        ]
+      }
+    }
+  }
+}

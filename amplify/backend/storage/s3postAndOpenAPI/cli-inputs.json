@@ -1,0 +1,14 @@
+{
+  "resourceName": "s3postAndOpenAPI",
+  "policyUUID": "5fa90b0d",
+  "bucketName": "hackthonappac6b2086d3f54e77885155c3f06aefe0",
+  "storageAccess": "auth",
+  "guestAccess": [],
+  "authAccess": [
+    "CREATE_AND_UPDATE",
+    "READ",
+    "DELETE"
+  ],
+  "triggerFunction": "S3Triggere685b0a0",
+  "groupAccess": {}
+}

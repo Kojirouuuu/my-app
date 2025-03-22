@@ -1,10 +1,10 @@
 {
   "version": "1",
   "cognitoConfig": {
-    "identityPoolName": "myappbba0a127_identitypool_bba0a127",
+    "identityPoolName": "hackthonapp1dc95aff_identitypool_1dc95aff",
     "allowUnauthenticatedIdentities": false,
-    "resourceNameTruncated": "myappbba0a127",
-    "userPoolName": "myappbba0a127_userpool_bba0a127",
+    "resourceNameTruncated": "hackth1dc95aff",
+    "userPoolName": "hackthonapp1dc95aff_userpool_1dc95aff",
     "autoVerifiedAttributes": [
       "email"
     ],
@@ -31,10 +31,10 @@
     "userpoolClientReadAttributes": [
       "email"
     ],
-    "userpoolClientLambdaRole": "myappbbba0a127_userpoolclient_lambda_role",
+    "userpoolClientLambdaRole": "hackth1dc95aff_userpoolclient_lambda_role",
     "userpoolClientSetAttributes": false,
-    "sharedId": "bba0a127",
-    "resourceName": "myappbba0a127",
+    "sharedId": "1dc95aff",
+    "resourceName": "hackthonapp1dc95aff",
     "authSelections": "identityPoolAndUserPool",
     "useDefault": "default",
     "userPoolGroupList": [],

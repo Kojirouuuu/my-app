@@ -1,24 +1,22 @@
 {
   "api": {
-    "myapp": {
-      "dependsOn": [],
-      "output": {
-        "authConfig": {
-          "additionalAuthenticationProviders": [],
-          "defaultAuthentication": {
-            "apiKeyConfig": {
-              "apiKeyExpirationDays": 7
-            },
-            "authenticationType": "API_KEY"
-          }
+    "api9cf4ad88": {
+      "dependsOn": [
+        {
+          "attributes": [
+            "Name",
+            "Arn"
+          ],
+          "category": "function",
+          "resourceName": "S3Triggere685b0a0"
         }
-      },
+      ],
       "providerPlugin": "awscloudformation",
-      "service": "AppSync"
+      "service": "API Gateway"
     }
   },
   "auth": {
-    "myappbba0a127": {
+    "hackthonapp1dc95aff": {
       "customAuth": false,
       "dependsOn": [],
       "frontendAuthConfig": {
@@ -44,149 +42,32 @@
     }
   },
   "function": {
-    "S3Trigger0308eca7": {
+    "S3Triggere685b0a0": {
       "build": true,
-      "providerPlugin": "awscloudformation",
-      "service": "Lambda"
-    },
-    "rdsLambdaFunction": {
-      "build": true,
-      "dependsOn": [
-        {
-          "attributes": [
-            "UserPoolId"
-          ],
-          "category": "auth",
-          "resourceName": "myappbba0a127"
-        },
-        {
-          "attributes": [
-            "Name"
-          ],
-          "category": "function",
-          "resourceName": "S3Trigger0308eca7"
-        },
-        {
-          "attributes": [
-            "BucketName"
-          ],
-          "category": "storage",
-          "resourceName": "s38d7558c4"
-        },
-        {
-          "attributes": [
-            "GraphQLAPIIdOutput",
-            "GraphQLAPIEndpointOutput",
-            "GraphQLAPIKeyOutput"
-          ],
-          "category": "api",
-          "resourceName": "myapp"
-        }
-      ],
       "providerPlugin": "awscloudformation",
       "service": "Lambda"
     }
   },
   "parameters": {
-    "AMPLIFY_function_S3Trigger0308eca7_deploymentBucketName": {
+    "AMPLIFY_function_S3Triggere685b0a0_deploymentBucketName": {
       "usedBy": [
         {
           "category": "function",
-          "resourceName": "S3Trigger0308eca7"
+          "resourceName": "S3Triggere685b0a0"
         }
       ]
     },
-    "AMPLIFY_function_S3Trigger0308eca7_rdsDatabase": {
+    "AMPLIFY_function_S3Triggere685b0a0_s3Key": {
       "usedBy": [
         {
           "category": "function",
-          "resourceName": "S3Trigger0308eca7"
-        }
-      ]
-    },
-    "AMPLIFY_function_S3Trigger0308eca7_rdsHost": {
-      "usedBy": [
-        {
-          "category": "function",
-          "resourceName": "S3Trigger0308eca7"
-        }
-      ]
-    },
-    "AMPLIFY_function_S3Trigger0308eca7_rdsPassword": {
-      "usedBy": [
-        {
-          "category": "function",
-          "resourceName": "S3Trigger0308eca7"
-        }
-      ]
-    },
-    "AMPLIFY_function_S3Trigger0308eca7_rdsUser": {
-      "usedBy": [
-        {
-          "category": "function",
-          "resourceName": "S3Trigger0308eca7"
-        }
-      ]
-    },
-    "AMPLIFY_function_S3Trigger0308eca7_s3Key": {
-      "usedBy": [
-        {
-          "category": "function",
-          "resourceName": "S3Trigger0308eca7"
-        }
-      ]
-    },
-    "AMPLIFY_function_rdsLambdaFunction_deploymentBucketName": {
-      "usedBy": [
-        {
-          "category": "function",
-          "resourceName": "rdsLambdaFunction"
-        }
-      ]
-    },
-    "AMPLIFY_function_rdsLambdaFunction_rdsDatabase": {
-      "usedBy": [
-        {
-          "category": "function",
-          "resourceName": "rdsLambdaFunction"
-        }
-      ]
-    },
-    "AMPLIFY_function_rdsLambdaFunction_rdsHost": {
-      "usedBy": [
-        {
-          "category": "function",
-          "resourceName": "rdsLambdaFunction"
-        }
-      ]
-    },
-    "AMPLIFY_function_rdsLambdaFunction_rdsPassword": {
-      "usedBy": [
-        {
-          "category": "function",
-          "resourceName": "rdsLambdaFunction"
-        }
-      ]
-    },
-    "AMPLIFY_function_rdsLambdaFunction_rdsUser": {
-      "usedBy": [
-        {
-          "category": "function",
-          "resourceName": "rdsLambdaFunction"
-        }
-      ]
-    },
-    "AMPLIFY_function_rdsLambdaFunction_s3Key": {
-      "usedBy": [
-        {
-          "category": "function",
-          "resourceName": "rdsLambdaFunction"
+          "resourceName": "S3Triggere685b0a0"
         }
       ]
     }
   },
   "storage": {
-    "s38d7558c4": {
+    "s3postAndOpenAPI": {
       "dependsOn": [
         {
           "attributes": [
@@ -195,7 +76,7 @@
             "LambdaExecutionRole"
           ],
           "category": "function",
-          "resourceName": "S3Trigger0308eca7"
+          "resourceName": "S3Triggere685b0a0"
         }
       ],
       "providerPlugin": "awscloudformation",

@@ -1,43 +1,32 @@
 {
   "dev": {
     "awscloudformation": {
-      "AuthRoleName": "amplify-myapp-dev-44405-authRole",
-      "UnauthRoleArn": "arn:aws:iam::266735802934:role/amplify-myapp-dev-44405-unauthRole",
-      "AuthRoleArn": "arn:aws:iam::266735802934:role/amplify-myapp-dev-44405-authRole",
-      "Region": "ap-northeast-1",
-      "DeploymentBucketName": "amplify-myapp-dev-44405-deployment",
-      "UnauthRoleName": "amplify-myapp-dev-44405-unauthRole",
-      "StackName": "amplify-myapp-dev-44405",
-      "StackId": "arn:aws:cloudformation:ap-northeast-1:266735802934:stack/amplify-myapp-dev-44405/c063ce00-0426-11f0-9cc7-0ab8e7d0bd79",
-      "AmplifyAppId": "d2wfsb351iqis3"
+      "AuthRoleName": "amplify-hackthonapp-dev-b221b-authRole",
+      "UnauthRoleArn": "arn:aws:iam::950848370655:role/amplify-hackthonapp-dev-b221b-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::950848370655:role/amplify-hackthonapp-dev-b221b-authRole",
+      "Region": "us-west-2",
+      "DeploymentBucketName": "amplify-hackthonapp-dev-b221b-deployment",
+      "UnauthRoleName": "amplify-hackthonapp-dev-b221b-unauthRole",
+      "StackName": "amplify-hackthonapp-dev-b221b",
+      "StackId": "arn:aws:cloudformation:us-west-2:950848370655:stack/amplify-hackthonapp-dev-b221b/a5ab1e10-06ce-11f0-bb66-02efb027207b",
+      "AmplifyAppId": "d1i2eqjp19fonn",
+      "APIGatewayAuthURL": "https://s3.amazonaws.com/amplify-hackthonapp-dev-b221b-deployment/amplify-cfn-templates/api/APIGatewayAuthStack.json"
     },
     "categories": {
       "auth": {
-        "myappbba0a127": {}
+        "hackthonapp1dc95aff": {}
       },
       "function": {
-        "S3Trigger0308eca7": {
-          "deploymentBucketName": "amplify-myapp-dev-44405-deployment",
-          "s3Key": "amplify-builds/S3Trigger0308eca7-5042354c4e7955744436-build.zip",
-          "rdsHost": "database-1.czmmgmk2enga.ap-northeast-1.rds.amazonaws.com",
-          "rdsUser": "admin",
-          "rdsPassword": "MToKGR4hBoQzhKXUCuxO",
-          "rdsDatabase": "myapp-rds"
-        },
-        "rdsLambdaFunction": {
-          "deploymentBucketName": "amplify-myapp-dev-44405-deployment",
-          "s3Key": "amplify-builds/rdsLambdaFunction-3845774c6a7a555a6363-build.zip",
-          "rdsHost": "database-1.czmmgmk2enga.ap-northeast-1.rds.amazonaws.com",
-          "rdsUser": "admin",
-          "rdsPassword": "MToKGR4hBoQzhKXUCuxO",
-          "rdsDatabase": "database-1"
+        "S3Triggere685b0a0": {
+          "deploymentBucketName": "amplify-hackthonapp-dev-b221b-deployment",
+          "s3Key": "amplify-builds/S3Triggere685b0a0-54777830694b764d6271-build.zip"
         }
       },
       "storage": {
-        "s38d7558c4": {}
+        "s3postAndOpenAPI": {}
       },
       "api": {
-        "myapp": {}
+        "api9cf4ad88": {}
       }
     }
   }
