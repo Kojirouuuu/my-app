@@ -40,22 +40,64 @@ export default function HomeScreen() {
   const loadLatestItems = async () => {
     try {
       setIsLoadingItems(true);
+      console.info("📥 Starting to load latest items");
       const { username } = await getCurrentUser();
+      console.info("👤 Current user:", username);
 
-      // TODO: APIを実装して最新の検出アイテムを取得
-      // 現在はモックデータを使用
-      const mockItems: DetectedItem[] = [
-        { item_name: "apple", confidence: 0.95, image_url: "" },
-        { item_name: "milk", confidence: 0.88, image_url: "" },
-        { item_name: "bread", confidence: 0.92, image_url: "" },
-      ];
+      // ユーザーのingredientsディレクトリから最新のJSONファイルを取得
+      const { items } = await list({
+        prefix: `public/ingredients/${username}/`,
+      });
+      console.info("📁 Found items in directory:", items.length);
 
-      setDetectedItems(mockItems);
+      if (items.length > 0) {
+        // 最新のファイルを取得（lastModifiedでソート）
+        const latestFile = items.sort((a, b) => {
+          const dateA = a.lastModified ? new Date(a.lastModified).getTime() : 0;
+          const dateB = b.lastModified ? new Date(b.lastModified).getTime() : 0;
+          return dateB - dateA;
+        })[0];
+        console.info("📄 Latest file:", latestFile.key);
+
+        const { url } = await getUrl({
+          key: latestFile.key,
+          options: {
+            accessLevel: "guest",
+            validateObjectExistence: true,
+            expiresIn: 3600,
+          },
+        });
+        console.info("🔗 Generated URL for file");
+
+        const response = await fetch(url.toString());
+        if (response.ok) {
+          const data = await response.json();
+          console.info("📦 Parsed JSON data:", data);
+          if (data.items && data.items.length > 0) {
+            console.info("✅ Found valid items in data");
+            setDetectedItems(data.items);
+            return true; // データが取得できたことを示す
+          } else {
+            console.warn("⚠️ No items found in parsed data");
+            return false;
+          }
+        } else {
+          console.error("❌ Failed to fetch JSON data:", response.status);
+          return false;
+        }
+      } else {
+        console.info("📭 No items found in directory");
+        setDetectedItems([]);
+        return false;
+      }
     } catch (error) {
-      console.error("Error loading items:", error);
+      console.error("❌ Error loading items:", error);
       Alert.alert("Error", "Failed to load detected items");
+      setDetectedItems([]);
+      return false;
     } finally {
       setIsLoadingItems(false);
+      console.info("✅ Finished loading items");
     }
   };
 
@@ -82,7 +124,9 @@ export default function HomeScreen() {
   const handleUploadFridgeImage = async () => {
     try {
       setIsUploading(true);
+      console.info("🚀 Starting fridge image upload process");
       const { username } = await getCurrentUser();
+      console.info("👤 Current user:", username);
 
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: "images",
@@ -91,11 +135,14 @@ export default function HomeScreen() {
       });
 
       if (!result.canceled) {
+        console.info("📸 Image selected from library");
         const uri = result.assets[0].uri;
         const response = await fetch(uri);
         const blob = await response.blob();
+        console.info("🔄 Image converted to blob");
 
         const path = await getUploadPath(username);
+        console.info("📁 Generated upload path:", path);
         const timestamp = new Date().toISOString();
 
         const uploadResult = await uploadData({
@@ -112,20 +159,67 @@ export default function HomeScreen() {
           },
         }).result;
 
-        console.log("Uploaded fridge image:", uploadResult);
+        console.info("✅ Upload successful:", uploadResult);
         setLastUploadTime(new Date().toLocaleString());
         Alert.alert("Success", "Fridge photo has been uploaded successfully.");
 
-        // Reload detected items after upload
-        await loadLatestItems();
+        // Lambda関数の処理完了を待つ（リトライ機能付き）
+        console.info("⏳ Waiting for Lambda function to process the image...");
+        let retryCount = 0;
+        const maxRetries = 12; // リトライ回数を増やす
+        const retryInterval = 30000; // 待機時間を30秒に増やす
+
+        while (retryCount < maxRetries) {
+          await new Promise((resolve) => setTimeout(resolve, retryInterval));
+          console.info(`🔄 Retry attempt ${retryCount + 1}/${maxRetries}`);
+
+          const success = await loadLatestItems();
+          if (success) {
+            console.info("✅ Successfully retrieved processed data");
+            break;
+          }
+
+          retryCount++;
+          if (retryCount < maxRetries) {
+            console.info(
+              `⏳ Waiting ${retryInterval / 1000} seconds before next retry...`
+            );
+          }
+        }
+
+        if (retryCount === maxRetries) {
+          console.warn(
+            "⚠️ Maximum retry attempts reached. Data may not be available yet."
+          );
+          Alert.alert(
+            "Processing",
+            "The image is still being processed. The results will appear automatically when ready."
+          );
+        }
+      } else {
+        console.info("❌ Image selection cancelled");
       }
     } catch (error) {
-      console.error("Error uploading fridge image:", error);
+      console.error("❌ Error uploading fridge image:", error);
       Alert.alert("Error", "Failed to upload the photo.");
     } finally {
       setIsUploading(false);
+      console.info("🏁 Upload process completed");
     }
   };
+
+  // 定期的な更新を追加
+  useEffect(() => {
+    const interval = setInterval(() => {
+      console.info("⏰ Periodic refresh of detected items (every 3 minutes)");
+      loadLatestItems();
+    }, 180000); // 3分ごとに更新
+
+    return () => {
+      console.info("🧹 Cleaning up periodic refresh");
+      clearInterval(interval);
+    };
+  }, []);
 
   const renderDetectedItems = () => {
     if (isLoadingItems) {

@@ -98,7 +98,7 @@ export default function HistoryScreen() {
           <Calendar size={16} color="#666" />
           <Text style={styles.dateText}>{item.uploadedAt}</Text>
         </View>
-        <Text style={styles.itemsText}>
+        <Text style={styles.itemsText} numberOfLines={2}>
           {item.detectedItems?.join(", ") || "No items detected"}
         </Text>
       </View>
@@ -118,7 +118,7 @@ export default function HistoryScreen() {
             style={styles.closeButton}
             onPress={() => setSelectedImage(null)}
           >
-            <X size={24} color="#000" />
+            <X size={24} color="#fff" />
           </TouchableOpacity>
 
           {selectedImage && (
@@ -166,6 +166,8 @@ export default function HistoryScreen() {
           keyExtractor={(item) => item.key}
           contentContainerStyle={styles.listContainer}
           showsVerticalScrollIndicator={false}
+          numColumns={2}
+          columnWrapperStyle={styles.row}
         />
       )}
 
@@ -178,51 +180,37 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
-    padding: 20,
-  },
-  title: {
-    fontFamily: "Inter-Bold",
-    fontSize: 24,
-    marginBottom: 20,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#fff",
   },
   loadingText: {
     marginTop: 12,
-    fontFamily: "Inter-Regular",
-    fontSize: 16,
-    color: "#666",
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    gap: 12,
-  },
-  emptyText: {
-    fontFamily: "Inter-Regular",
     fontSize: 16,
     color: "#666",
   },
   listContainer: {
-    gap: 16,
+    padding: 16,
+  },
+  row: {
+    justifyContent: "space-between",
+    marginBottom: 16,
   },
   imageCard: {
+    width: "48%",
     backgroundColor: "#fff",
-    borderRadius: 12,
-    overflow: "hidden",
+    borderRadius: 16,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 4,
     },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowRadius: 12,
+    elevation: 5,
+    overflow: "hidden",
   },
   thumbnail: {
     width: "100%",
@@ -230,60 +218,76 @@ const styles = StyleSheet.create({
     backgroundColor: "#f5f5f5",
   },
   imageInfo: {
-    padding: 16,
-    gap: 8,
+    padding: 12,
   },
   dateContainer: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    marginBottom: 4,
   },
   dateText: {
-    fontFamily: "Inter-Regular",
-    fontSize: 14,
+    marginLeft: 4,
+    fontSize: 12,
     color: "#666",
   },
   itemsText: {
-    fontFamily: "Inter-Regular",
     fontSize: 14,
     color: "#333",
+    lineHeight: 20,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  emptyText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: "#666",
   },
   modalContainer: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.8)",
+    backgroundColor: "rgba(0, 0, 0, 0.9)",
     justifyContent: "center",
-    padding: 20,
+    alignItems: "center",
   },
   modalContent: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    overflow: "hidden",
-  },
-  closeButton: {
-    position: "absolute",
-    top: 12,
-    right: 12,
-    zIndex: 1,
-    backgroundColor: "#fff",
-    borderRadius: 20,
-    padding: 8,
+    width: "100%",
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
   },
   modalImage: {
     width: "100%",
-    height: 400,
-    backgroundColor: "#f5f5f5",
+    height: "100%",
+    resizeMode: "contain",
+  },
+  closeButton: {
+    position: "absolute",
+    top: 40,
+    right: 20,
+    padding: 12,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    borderRadius: 20,
+    zIndex: 1,
   },
   modalInfo: {
-    padding: 16,
-    gap: 8,
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 20,
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
   },
   modalDate: {
-    fontFamily: "Inter-Bold",
+    color: "#fff",
     fontSize: 16,
+    marginBottom: 8,
   },
   modalItems: {
-    fontFamily: "Inter-Regular",
-    fontSize: 14,
-    color: "#666",
+    color: "#fff",
+    fontSize: 16,
+    lineHeight: 24,
   },
 });
